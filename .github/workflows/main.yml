@@ -1,0 +1,82 @@
+name: Security Scan
+on:
+  workflow_dispatch:
+    inputs:
+      harness-org-id:
+        description: 'Harness Organization ID'
+        required: true
+        type: string
+      harness-project-id:
+        description: 'Harness Project ID'
+        required: true
+        type: string
+      harness-domain:
+        description: 'Harness domain (e.g., https://app.harness.io)'
+        required: false
+        type: string
+        default: 'https://app.harness.io'
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: <default-branch>
+
+      - name: Harness Code SAST
+        id: sto-shiftleftsast-sast
+        uses: ./.github/actions/harness-sto
+        with:
+          harness-domain: ${{ inputs.harness-domain }}
+          harness-org-id: ${{ inputs.harness-org-id }}
+          harness-project-id: ${{ inputs.harness-project-id }}
+          harness-token: ${{ secrets.HARNESS_TOKEN }}
+          scan-config: sast
+          scan-mode: orchestration
+          scanner: harnesssast
+          target-type: repository
+
+      - name: Harness Code SCA
+        id: sto-shiftleftsast-sca
+        uses: ./.github/actions/harness-sto
+        with:
+          harness-domain: ${{ inputs.harness-domain }}
+          harness-org-id: ${{ inputs.harness-org-id }}
+          harness-project-id: ${{ inputs.harness-project-id }}
+          harness-token: ${{ secrets.HARNESS_TOKEN }}
+          scan-config: sca
+          scan-mode: orchestration
+          scanner: harnesssast
+          target-type: repository
+
+      - name: Harness Code Secrets
+        id: sto-shiftleftsast-secrets
+        uses: ./.github/actions/harness-sto
+        with:
+          harness-domain: ${{ inputs.harness-domain }}
+          harness-org-id: ${{ inputs.harness-org-id }}
+          harness-project-id: ${{ inputs.harness-project-id }}
+          harness-token: ${{ secrets.HARNESS_TOKEN }}
+          scan-config: sast
+          scan-mode: orchestration
+          scanner: harnesssast
+          target-type: repository
+
+      - name: Harness Container Container
+        id: sto-shiftleftsca-container
+        uses: ./.github/actions/harness-sto
+        with:
+          harness-domain: ${{ inputs.harness-domain }}
+          harness-org-id: ${{ inputs.harness-org-id }}
+          harness-project-id: ${{ inputs.harness-project-id }}
+          harness-token: ${{ secrets.HARNESS_TOKEN }}
+          image-domain: docker.io
+          image-name: <image-name>
+          image-tag: <image-tag>
+          image-type: docker_v2
+          scan-config: default
+          scan-mode: orchestration
+          scanner: harnesssca
+          target-type: container
+
